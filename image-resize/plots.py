@@ -34,3 +34,4 @@ def plot_images_with_xywh_bounding_boxes(images, boxes, class_ids, class_labels,
         if confidences is not None:
           label += ' {:.2f}'.format(confidences[i][box_idx])
         axs[r, c].text(xmin, ymin, label, size='large', color='white', bbox={'facecolor': color, 'alpha': 1.0})
+  plt.show()
