@@ -2,9 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
-
-def plot_images_with_xywh_bounding_boxes(images, boxes, class_ids, class_labels, image_per_row=4, show_labels=True,
-                                         confidences=None):
+def plot_images_with_tlbr(images, boxes, class_ids, class_labels, image_per_row=4, show_labels=True,
+                          confidences=None):
   class_colors = plt.cm.hsv(np.linspace(0, 1, len(class_labels) + 1)).tolist()
   image_count = len(images)
   row_count = math.ceil(image_count / image_per_row)
@@ -26,8 +25,10 @@ def plot_images_with_xywh_bounding_boxes(images, boxes, class_ids, class_labels,
       color = class_colors[class_idx]
       xmin = box[0]
       ymin = box[1]
-      w = box[2]
-      h = box[3]
+      xmax = box[2]
+      ymax = box[3]
+      w = xmax - xmin
+      h = ymax - ymin
       axs[r, c].add_patch(plt.Rectangle((xmin, ymin), w, h, color=color, fill=False, linewidth=2))
       if show_labels:
         label = '{}'.format(class_labels[class_idx])

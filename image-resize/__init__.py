@@ -1,10 +1,12 @@
 import os
 
 import matplotlib.pyplot as plt
+import numpy as np
+import cv2
 
 from yolo_transformations import load_dataset_info
-from bounding_boxes import from_rel_xywh_to_xywh
-from plots import plot_images_with_xywh_bounding_boxes
+from bounding_boxes import from_tlwh_to_tlbr
+from plots import plot_images_with_tlbr
 
 
 def load_images_paths_and_labels_paths_from_folder(folder):
@@ -19,22 +21,54 @@ def load_images_paths_and_labels_paths_from_folder(folder):
   return images, labels
 
 
+def resize_img(img_path, input_size):
+  my_image = plt.imread(img_path)
+
+  if max(my_image.shape[0], my_image.shape[1]) > input_size:
+    if my_image.shape[0] >= my_image.shape[1]:
+      height = input_size
+      width = int(my_image.shape[1] * input_size / my_image.shape[0])
+    else:
+      width = input_size
+      height = int(my_image.shape[0] * input_size / my_image.shape[1])
+    my_image = cv2.resize(my_image, (width, height), interpolation=cv2.INTER_LINEAR)
+
+  plt.imsave(img_path, my_image)
+
+
+def pad_img(img_path, input_size):
+  my_image = plt.imread(img_path)
+
+  # Punto 5
+  pad_width = input_size - my_image.shape[0]
+  pad_height = input_size - my_image.shape[1]
+  my_padded_image = np.pad(my_image,
+                           ((0, pad_width), (0, pad_height), (0, 0)),
+                           'constant')
+  plt.imsave(img_path, my_padded_image)
+
+
 class_labels = ['logo', 'none']
+input_size = 512
 
 images, labels = load_images_paths_and_labels_paths_from_folder('data')
-print(images[0], labels[0])
 
+for img_path in images:
+  resize_img(img_path, input_size)
 img_paths, yolov8_boxes, id_list = load_dataset_info(labels, images)
 
-print(img_paths[0], yolov8_boxes[0], id_list[0])
-
 # train_xywh_box_list=from_rel_xywh_to_xywh(train_yolov8_box_list,original_image_size)
-yolov8_boxes = from_rel_xywh_to_xywh(yolov8_boxes, images)
+# yolov8_boxes = from_rel_xywh_to_xywh(yolov8_boxes, images)
+tlbr_boxes = from_tlwh_to_tlbr(yolov8_boxes, img_paths)
 
-print(img_paths[0], yolov8_boxes[0], id_list[0])
+for img_path in images:
+  pad_img(img_path, input_size)
+
 # plot image 0
 plt.figure(figsize=(10, 10))
 plt.imshow(plt.imread(img_paths[0]))
 plt.show()
-plot_images_with_xywh_bounding_boxes([plt.imread(img_path) for img_path in img_paths], yolov8_boxes, id_list,
-                                     class_labels, image_per_row=4, show_labels=True)
+# plot_images_with_xywh_bounding_boxes([plt.imread(img_path) for img_path in img_paths], yolov8_boxes, id_list,
+#                                      class_labels, image_per_row=4, show_labels=True)
+plot_images_with_tlbr([plt.imread(img_path) for img_path in img_paths], tlbr_boxes, id_list,
+                      class_labels, image_per_row=4, show_labels=False)
