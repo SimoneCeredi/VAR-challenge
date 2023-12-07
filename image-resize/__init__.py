@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
-from yolo_transformations import load_dataset_info
+from yolo_transformations import load_dataset_info, load_tlbr_dataset_info
 from bounding_boxes import from_tlwh_to_tlbr
 from plots import plot_images_with_tlbr
 
@@ -48,21 +48,31 @@ def pad_img(img_path, input_size):
   plt.imsave(img_path, my_padded_image)
 
 
-class_labels = ['logo', 'none']
+def save_bboxes(bboxes, label_path):
+  with open(label_path, 'w') as file:
+    for bbox in bboxes:
+      file.write('1 ' + ' '.join(map(str, bbox)) + '\n')
+
+
+class_labels = ['none', 'logo']
 input_size = 512
 
 images, labels = load_images_paths_and_labels_paths_from_folder('data')
 
 for img_path in images:
   resize_img(img_path, input_size)
+
 img_paths, yolov8_boxes, id_list = load_dataset_info(labels, images)
 
-# train_xywh_box_list=from_rel_xywh_to_xywh(train_yolov8_box_list,original_image_size)
-# yolov8_boxes = from_rel_xywh_to_xywh(yolov8_boxes, images)
 tlbr_boxes = from_tlwh_to_tlbr(yolov8_boxes, img_paths)
+
+for i in range(len(labels)):
+  save_bboxes(tlbr_boxes[i], labels[i])
 
 for img_path in images:
   pad_img(img_path, input_size)
+
+
 
 # plot image 0
 plt.figure(figsize=(10, 10))
@@ -71,4 +81,15 @@ plt.show()
 # plot_images_with_xywh_bounding_boxes([plt.imread(img_path) for img_path in img_paths], yolov8_boxes, id_list,
 #                                      class_labels, image_per_row=4, show_labels=True)
 plot_images_with_tlbr([plt.imread(img_path) for img_path in img_paths], tlbr_boxes, id_list,
-                      class_labels, image_per_row=4, show_labels=False)
+                      class_labels, image_per_row=4, show_labels=True)
+
+images, labels = load_images_paths_and_labels_paths_from_folder('data')
+img_paths, yolov8_boxes, id_list = load_tlbr_dataset_info(labels, images)
+
+plt.figure(figsize=(10, 10))
+plt.imshow(plt.imread(img_paths[0]))
+plt.show()
+# plot_images_with_xywh_bounding_boxes([plt.imread(img_path) for img_path in img_paths], yolov8_boxes, id_list,
+#                                      class_labels, image_per_row=4, show_labels=True)
+plot_images_with_tlbr([plt.imread(img_path) for img_path in img_paths], tlbr_boxes, id_list,
+                      class_labels, image_per_row=4, show_labels=True)

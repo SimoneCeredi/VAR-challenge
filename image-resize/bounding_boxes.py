@@ -11,7 +11,6 @@ def from_tlwh_to_tlbr(bboxes, images_path):
     image_height, image_width = image.shape[:2]
     image_tlbr_bboxes = []
     for bbox in bbox_list:
-      print(bbox)
       top_left_x = bbox[0] * image_width
       top_left_y = bbox[1] * image_height
       bottom_right_x = top_left_x + bbox[2] * image_width
